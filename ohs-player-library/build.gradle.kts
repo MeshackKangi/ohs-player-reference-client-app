@@ -31,6 +31,48 @@ plugins {
   id("spotless-conventions")
 }
 
+// --- OAuth / OIDC config ------------------------------------------------------
+// Provider-agnostic: the app resolves endpoints via OIDC discovery
+// ({issuer}/.well-known/openid-configuration).
+fun authProp(key: String, default: String): String =
+  nonBlankEnv(key).orNull ?: localProperties[key]?.takeIf { it.isNotBlank() } ?: default
+
+// Auth/deployment settings live in local.properties (git-ignored), with env-var overrides for CI.
+val localProperties: Map<String, String> =
+  providers
+    .fileContents(rootProject.layout.projectDirectory.file("local.properties"))
+    .asText
+    .map { text ->
+      val props = Properties().apply { load(text.reader()) }
+      props.stringPropertyNames().associateWith(props::getProperty)
+    }
+    .getOrElse(emptyMap())
+
+/*
+ * Reads an environment variable, but yields a value only when it is non-blank.
+ * Blank or whitespace-only vars are treated as absent, leaving the provider
+ * empty so downstream `.getOrElse(...)` / `.orNull` fallbacks take over. This
+ * stops an accidentally exported-but-empty var (e.g. `VERSION_NAME=`) from
+ * slipping past those fallbacks.
+ */
+fun nonBlankEnv(name: String): Provider<String> =
+  providers.environmentVariable(name).filter { it.isNotBlank() }
+
+/*
+ * Resolved once at configuration time. `generateAuthConfig` bakes these into
+ * GeneratedAuthConfig, and the redirect scheme/host additionally drive the Android
+ * manifest placeholders below, so the LoginRedirectActivity intent-filter cannot
+ * drift from the config the app actually authenticates with.
+ */
+val resolvedIssuer = authProp("OAUTH_ISSUER", "https://keycloak.example.org/realms/ohs-player")
+val resolvedClientId = authProp("OAUTH_CLIENT_ID", "ohs-player-reference-app")
+val resolvedRedirectScheme = authProp("OAUTH_REDIRECT_SCHEME", "dev.ohs.player.reference.app")
+val resolvedRedirectHost = authProp("OAUTH_REDIRECT_HOST", "auth")
+val resolvedWebRedirectUrl = authProp("OAUTH_WEB_REDIRECT_URL", "http://localhost:8080/callback")
+val resolvedDesktopPort = authProp("OAUTH_DESKTOP_REDIRECT_PORT", "8765")
+val resolvedScopes = authProp("OAUTH_SCOPES", "openid profile email offline_access")
+val resolvedFhirBaseUrl = authProp("FHIR_BASE_URL", "https://hapi.fhir.org/baseR4")
+
 kotlin {
   jvmToolchain(21)
 
@@ -162,45 +204,21 @@ kotlin {
 
 compose.resources { packageOfResClass = "player_reference.reference_app.generated.resources" }
 
-// --- OAuth / OIDC config ------------------------------------------------------
-// Provider-agnostic: the app resolves endpoints via OIDC discovery
-// ({issuer}/.well-known/openid-configuration).
-fun authProp(key: String, default: String): String =
-  nonBlankEnv(key).orNull ?: localProperties[key]?.takeIf { it.isNotBlank() } ?: default
-
-// Auth/deployment settings live in local.properties (git-ignored), with env-var overrides for CI.
-val localProperties: Map<String, String> =
-  providers
-    .fileContents(rootProject.layout.projectDirectory.file("local.properties"))
-    .asText
-    .map { text ->
-      val props = Properties().apply { load(text.reader()) }
-      props.stringPropertyNames().associateWith(props::getProperty)
-    }
-    .getOrElse(emptyMap())
-
-/*
- * Reads an environment variable, but yields a value only when it is non-blank.
- * Blank or whitespace-only vars are treated as absent, leaving the provider
- * empty so downstream `.getOrElse(...)` / `.orNull` fallbacks take over. This
- * stops an accidentally exported-but-empty var (e.g. `VERSION_NAME=`) from
- * slipping past those fallbacks.
- */
-fun nonBlankEnv(name: String): Provider<String> =
-  providers.environmentVariable(name).filter { it.isNotBlank() }
-
 val authConfigOutputDir = layout.buildDirectory.dir("generated/authconfig/commonMain/kotlin")
 
 val generateAuthConfig =
   tasks.register("generateAuthConfig") {
-    val issuer = authProp("OAUTH_ISSUER", "https://keycloak.example.org/realms/ohs-player")
-    val clientId = authProp("OAUTH_CLIENT_ID", "ohs-player-reference-app")
-    val redirectScheme = authProp("OAUTH_REDIRECT_SCHEME", "dev.ohs.player.reference.app")
-    val redirectHost = authProp("OAUTH_REDIRECT_HOST", "auth")
-    val webRedirectUrl = authProp("OAUTH_WEB_REDIRECT_URL", "http://localhost:8080/callback")
-    val desktopPort = authProp("OAUTH_DESKTOP_REDIRECT_PORT", "8765")
-    val scopes = authProp("OAUTH_SCOPES", "openid profile email offline_access")
-    val fhirBaseUrl = authProp("FHIR_BASE_URL", "https://hapi.fhir.org/baseR4")
+    // Copied into locals so the doLast lambda below closes over plain Strings.
+    // Reading a script-level `val` from inside doLast captures a Gradle script
+    // object reference, which the configuration cache cannot serialize.
+    val issuer = resolvedIssuer
+    val clientId = resolvedClientId
+    val redirectScheme = resolvedRedirectScheme
+    val redirectHost = resolvedRedirectHost
+    val webRedirectUrl = resolvedWebRedirectUrl
+    val desktopPort = resolvedDesktopPort
+    val scopes = resolvedScopes
+    val fhirBaseUrl = resolvedFhirBaseUrl
     val versionName = releaseVersionName
     val versionCode = releaseVersionCode
     val outDir = authConfigOutputDir

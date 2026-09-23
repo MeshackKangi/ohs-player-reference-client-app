@@ -23,9 +23,10 @@
         </activity>
 
         <!--
-          Captures the OAuth redirect. The scheme/host MUST match
-          OAUTH_REDIRECT_SCHEME / OAUTH_REDIRECT_HOST in local.properties
-          (defaults shown). If you change those, update this intent-filter too.
+          Captures the OAuth redirect. The scheme/host are injected as manifest
+          placeholders (oauthRedirectScheme / oauthRedirectHost) by the consuming
+          app module, which resolves them from OAUTH_REDIRECT_SCHEME /
+          OAUTH_REDIRECT_HOST (env var, then local.properties, then default).
         -->
         <activity
             android:name=".auth.LoginRedirectActivity"
@@ -38,8 +39,8 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:scheme="dev.ohs.player.reference.app"
-                    android:host="auth" />
+                    android:scheme="${oauthRedirectScheme}"
+                    android:host="${oauthRedirectHost}" />
             </intent-filter>
         </activity>
     </application>

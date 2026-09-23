@@ -56,12 +56,35 @@ android {
       .map { raw -> raw.toIntOrNull() ?: error("VERSION_CODE='$raw' must be an integer") }
       .getOrElse(1)
 
+  // --- OAuth / OIDC config --------------------------------------------------
+  // Manifest placeholders must be resolved here (not in ohs-player-library),
+  // since this app module is what merges the final manifest. Mirrors the
+  // library's authProp() pattern: env var overrides local.properties
+  // (git-ignored dev config), falling back to a default.
+  val localProperties: Map<String, String> =
+    providers
+      .fileContents(rootProject.layout.projectDirectory.file("local.properties"))
+      .asText
+      .map { text: String ->
+        val props = Properties().apply { load(text.reader()) }
+        props.stringPropertyNames().associateWith(props::getProperty)
+      }
+      .getOrElse(emptyMap())
+
+  fun authProp(key: String, default: String): String =
+    nonBlankEnv(key).orNull ?: localProperties[key]?.takeIf { it.isNotBlank() } ?: default
+
+  val resolvedRedirectScheme = authProp("OAUTH_REDIRECT_SCHEME", "dev.ohs.player.reference.app")
+  val resolvedRedirectHost = authProp("OAUTH_REDIRECT_HOST", "auth")
+
   defaultConfig {
     applicationId = "dev.ohs.player.reference.app"
     minSdk = libs.versions.android.minSdk.get().toInt()
     targetSdk = libs.versions.android.targetSdk.get().toInt()
     versionCode = releaseVersionCode
     versionName = releaseVersionName
+    manifestPlaceholders["oauthRedirectScheme"] = resolvedRedirectScheme
+    manifestPlaceholders["oauthRedirectHost"] = resolvedRedirectHost
   }
   packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
 
