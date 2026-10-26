@@ -82,7 +82,7 @@ Use `gradlew.bat` on Windows, and run every command from the repository root. Co
 | `OAUTH_REDIRECT_HOST` | `auth` | Android/iOS deep-link host. |
 | `OAUTH_DESKTOP_REDIRECT_PORT` | `8765` | Port for the desktop loopback listener. |
 | `OAUTH_WEB_REDIRECT_URL` | `http://localhost:8080/callback` | Full URL the browser returns to on web. |
-| `FHIR_BASE_URL` | `https://hapi.fhir.org/baseR4` | FHIR R4 base URL for sync. Requests carry the session's bearer token. |
+| `FHIR_BASE_URL` | `https://hapi.fhir.org/baseR4/` | FHIR R4 base URL for sync. Requests carry the session's bearer token. |
 
 Each platform uses its idiomatic flow: Chrome Custom Tabs on Android, `ASWebAuthenticationSession` on iOS (no `Info.plist` entry needed), a loopback HTTP server on desktop, and a full-page redirect on web.
 
@@ -337,7 +337,7 @@ Click **Use this template → Create a new repository** on GitHub, then work thr
 
 [`ci.yml`](./.github/workflows/ci.yml) validates every pull request and push to `main`: spotless formatting, `jvmTest`, Android `lintDebug`, and an iOS compile-and-link on macOS runners for `iosArm64` and `iosSimulatorArm64`.
 
-Pushing a semantic version tag (`vX.Y.Z` or `vX.Y.Z-suffix`) triggers [`release.yml`](./.github/workflows/release.yml), which builds and signs every platform and publishes a GitHub Release with checksummed artifacts: an Android APK, desktop installers (`.deb`, `.rpm`, `.msi`, `.dmg`) and a portable Linux tarball. A `workflow_dispatch` run is a dry run — it builds and uploads artifacts but publishes no Release. The web and GitHub Pages jobs are gated off (`if: false`) pending a larger runner; the web preview is deployed manually meanwhile.
+Pushing a semantic version tag (`vX.Y.Z` or `vX.Y.Z-suffix`) triggers [`release.yml`](./.github/workflows/release.yml), which publishes a GitHub Release with checksummed artifacts: an Android APK, desktop installers (`.deb`, `.rpm`, `.msi`) and a portable Linux tarball. A `workflow_dispatch` run is a dry run — it builds and uploads artifacts but publishes no Release. The web and GitHub Pages jobs are gated off (`if: false`) pending a larger runner; the web preview is deployed manually meanwhile.
 
 ### App configuration on CI
 
