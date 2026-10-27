@@ -58,12 +58,12 @@ jobs:
         include:
           - id: jvm
             label: JVM/Desktop
-            tasks: ':ohs-player-library:jvmTest'
+            tasks: ':reference-shared:jvmTest'
             kotlinDaemonHeap: '-Xmx6g -XX:+UseG1GC'
             extraArgs: ''
           - id: android
             label: Android
-            tasks: ':ohs-player-library:assembleAndroidMain :androidApp:lintDebug'
+            tasks: ':reference-shared:assembleAndroidMain :androidApp:lintDebug'
             kotlinDaemonHeap: '-Xmx6g -XX:+UseG1GC'
             extraArgs: ''
           - id: js
@@ -73,7 +73,7 @@ jobs:
             extraArgs: ''
           - id: wasm
             label: Kotlin/Wasm
-            tasks: ':ohs-player-library:wasmJsBrowserTest :webApp:wasmJsBrowserTest'
+            tasks: ':reference-shared:wasmJsBrowserTest :webApp:wasmJsBrowserTest'
             kotlinDaemonHeap: '-Xmx10g -XX:+UseG1GC'
             extraArgs: '--max-workers=1'
     steps:
@@ -144,4 +144,4 @@ jobs:
       - name: Compile + link ${{ matrix.label }}
         run: |
           ./gradlew --stacktrace \
-            :ohs-player-library:linkDebugFramework${{ matrix.target }}
+            :reference-shared:linkDebugFramework${{ matrix.target }}

@@ -57,10 +57,6 @@ android {
       .getOrElse(1)
 
   // --- OAuth / OIDC config --------------------------------------------------
-  // Manifest placeholders must be resolved here (not in ohs-player-library),
-  // since this app module is what merges the final manifest. Mirrors the
-  // library's authProp() pattern: env var overrides local.properties
-  // (git-ignored dev config), falling back to a default.
   val localProperties: Map<String, String> =
     providers
       .fileContents(rootProject.layout.projectDirectory.file("local.properties"))
@@ -126,7 +122,7 @@ android {
 }
 
 dependencies {
-  implementation(project(":ohs-player-library"))
+  implementation(project(":reference-shared"))
   implementation(libs.compose.uiToolingPreview)
   implementation(libs.androidx.activity.compose)
   implementation(libs.ktor.client.okhttp)

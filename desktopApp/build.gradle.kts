@@ -31,13 +31,13 @@ kotlin {
 
   sourceSets {
     jvmMain.dependencies {
-      implementation(project(":ohs-player-library"))
+      implementation(project(":reference-shared"))
       implementation(compose.desktop.currentOs)
       implementation(libs.kotlinx.coroutinesSwing)
       implementation(libs.ktor.client.cio)
     }
     jvmTest.dependencies {
-      implementation(project(":ohs-player-library"))
+      implementation(project(":reference-shared"))
       implementation(compose.desktop.currentOs)
       implementation(libs.koin.test)
     }
@@ -62,7 +62,7 @@ compose.desktop {
       packageName = "PlayerReference"
       packageVersion = composePackageVersion
 
-      val iconsDir = project.layout.projectDirectory.dir("../ohs-player-library/desktop-icons")
+      val iconsDir = project.layout.projectDirectory.dir("../reference-shared/desktop-icons")
       macOS { iconFile.set(iconsDir.file("app-icon.icns")) }
       windows { iconFile.set(iconsDir.file("app-icon.ico")) }
       linux { iconFile.set(iconsDir.file("app-icon.png")) }

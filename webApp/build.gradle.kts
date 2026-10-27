@@ -43,7 +43,7 @@ kotlin {
     named("wasmJsMain") { dependsOn(webMain) }
 
     webMain.dependencies {
-      implementation(project(":ohs-player-library"))
+      implementation(project(":reference-shared"))
       implementation(libs.compose.ui)
     }
     jsMain.dependencies {
