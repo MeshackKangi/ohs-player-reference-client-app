@@ -43,7 +43,7 @@ kotlin {
     named("wasmJsMain") { dependsOn(webMain) }
 
     webMain.dependencies {
-      implementation(project(":reference-shared"))
+      implementation(project(":shared"))
       implementation(libs.compose.ui)
     }
     jsMain.dependencies {

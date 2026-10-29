@@ -122,7 +122,7 @@ android {
 }
 
 dependencies {
-  implementation(project(":reference-shared"))
+  implementation(project(":shared"))
   implementation(libs.compose.uiToolingPreview)
   implementation(libs.androidx.activity.compose)
   implementation(libs.ktor.client.okhttp)
